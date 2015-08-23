@@ -11,6 +11,10 @@ import edu.rit.moviestat.info.MovieDataSource;
 import edu.rit.moviestat.info.MovieSelection;
 import edu.rit.moviestat.info.WebScrapingMovieDataSource;
 
+/**
+ * Spring configuration of the MovieStat application.
+ * @author Scott Jordan
+ */
 @SpringBootApplication
 public class MovieStatApplication extends SpringBootServletInitializer {
     

@@ -8,6 +8,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+/**
+ * MovieSelection corresponding to those movies that are presently in theaters
+ * (as reported by IMDB).
+ * @author Scott Jordan
+ */
 public class InTheatersMovieSelection implements MovieSelection{
     private static final String IMDB_ROOT_URI = "http://www.imdb.com/";
 

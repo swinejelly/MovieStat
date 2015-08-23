@@ -1,12 +1,17 @@
 package edu.rit.moviestat.model;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.OptionalDouble;
 
+/**
+ * Model representing a movie and its cast.
+ * @author Scott Jordan
+ */
 public class Movie {
     private String title;
     
-    private Date releaseDate;
+    private LocalDate releaseDate;
     
     private List<Actor> cast;
 
@@ -18,11 +23,11 @@ public class Movie {
         this.title = title;
     }
 
-    public Date getReleaseDate() {
+    public LocalDate getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate(Date releaseDate) {
+    public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -34,8 +39,17 @@ public class Movie {
         this.cast = cast;
     }
     
+    public Double getAverageAgeCast() {
+        OptionalDouble averageAge = cast.stream().filter(actor -> actor.getAge() != null).mapToInt(actor -> actor.getAge()).average();
+        
+        if (averageAge.isPresent()) {
+            return averageAge.getAsDouble();
+        }
+        
+        return null;
+    }
 
-    public Movie(String title, Date releaseDate, List<Actor> cast) {
+    public Movie(String title, LocalDate releaseDate, List<Actor> cast) {
         this.title = title;
         this.releaseDate = releaseDate;
         this.cast = cast;

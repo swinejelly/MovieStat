@@ -8,5 +8,11 @@ import edu.rit.moviestat.model.Movie;
  * @author Scott Jordan
  */
 public interface MovieDataSource {
+    /**
+     * Gets a Movie model from a movie's IMDB id.
+     * @param imdbId The IMDB id of the movie.
+     * @return Movie model
+     * @throws IOException If an error occurred retrieving the movie.
+     */
     public Movie getMovie(String imdbId) throws IOException;
 }

@@ -13,6 +13,10 @@ import edu.rit.moviestat.info.MovieDataSource;
 import edu.rit.moviestat.info.MovieSelection;
 import edu.rit.moviestat.model.Movie;
 
+/**
+ * Main controller of the MovieStat application
+ * @author Scott Jordan
+ */
 @Controller
 public class HomeController {
     

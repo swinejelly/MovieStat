@@ -25,12 +25,16 @@
       <tr>
         <td>${movie.getTitle()}</td>
         <td>
-          <fmt:formatDate value="${movie.getReleaseDate()}" pattern="MM/dd/yyyy"/>
+          ${movie.getReleaseDate()}
         </td>
         <td>
           <ul>
+            <i>Average age of cast: 
+              <fmt:formatNumber value="${movie.getAverageAgeCast()}" maxFractionDigits="1" />
+            </i>
             <c:forEach items="${movie.getCast()}" var="actor">
-              <li>${actor.getName()}</li>
+              <li>${actor.getName()}
+                  (${actor.getAge()})</li>
             </c:forEach>
           </ul>
       </tr>
