@@ -1,7 +1,8 @@
 package edu.rit.moviestat.info;
 
-import java.io.IOException;
 import java.util.List;
+
+import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 
 /**
  * An arbitrary selection of movies identified by their IMDB ids.
@@ -11,5 +12,5 @@ public interface MovieSelection {
     /**
      * @return IMDB ids of an arbitrary selection of movies.
      */
-    public List<String> getSelectedMovies() throws IOException;
+    public List<String> getSelectedMovies() throws MovieInformationUnavailableException;
 }

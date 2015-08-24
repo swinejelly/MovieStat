@@ -8,12 +8,19 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 import edu.rit.moviestat.model.Actor;
 import edu.rit.moviestat.model.Movie;
 
@@ -27,12 +34,21 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     private static final String IMDB_ROOT_URI = "http://www.imdb.com/";
     
     private static final String WIKIPEDIA_ROOT_URI = "https://en.wikipedia.org/";
+    
+    @Autowired
+    private Executor executor;
 
     @Override
-    public Movie getMovie(String imdbId) throws IOException {
+    public Movie getMovie(String imdbId) throws MovieInformationUnavailableException {
         String url = IMDB_ROOT_URI + "title/" + imdbId;
         
-        Document doc = Jsoup.connect(url).get();
+        Document doc;
+        
+        try {
+            doc = Jsoup.connect(url).get();
+        } catch (IOException e) {
+            throw new MovieInformationUnavailableException("Could not retrieve movie information.", e);
+        }
         
         String title = getTitle(doc);
         
@@ -92,21 +108,41 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     /**
      * Get the actors of a movie from its IMDB page.
      * @param doc Document of a movie's IMDB page.
+     * @return List of Actors
      */
-    private static List<Actor> getActors(Document doc) {
+    private List<Actor> getActors(Document doc) throws MovieInformationUnavailableException {
         List<String> actorNames = doc.select("td[itemtype$=Person]").stream()
                                      .map(element -> element.select("span").html())
                                      .collect(Collectors.toList());
         
         List<Actor> actors = new ArrayList<Actor>();
         
-        for (String actorName: actorNames) {
-            Actor actor = getActor(actorName);
-            
-            actors.add(actor);
+        List<RunnableFuture<Actor>> actorFutures = actorNames.stream().map(WebScrapingMovieDataSource::getActorRunnableFuture)
+                                                                      .collect(Collectors.toList());
+        
+        for (RunnableFuture<Actor> actorFuture: actorFutures) {
+            executor.execute(actorFuture);
+        }
+        
+        for (Future<Actor> actorFuture: actorFutures) {
+            try {
+                actors.add(actorFuture.get());
+            } catch (InterruptedException | ExecutionException e) {
+                // Neither exception should happen in normal or recoverable operation of the program.
+                throw new RuntimeException(e);
+            }
         }
         
         return actors;
+    }
+    
+    /**
+     * Creates a RunnableFuture for an Actor.
+     * @param actorName Name of the actor to get information for.
+     * @return RunnableFuture that resolves to an Actor.
+     */
+    private static RunnableFuture<Actor> getActorRunnableFuture(String actorName) {
+        return new FutureTask<Actor>( () -> getActor(actorName));
     }
     
     /**

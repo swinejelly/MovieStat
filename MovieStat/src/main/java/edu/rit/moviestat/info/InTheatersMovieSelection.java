@@ -8,6 +8,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import edu.rit.moviestat.exception.MovieInformationUnavailableException;
+
 /**
  * MovieSelection corresponding to those movies that are presently in theaters
  * (as reported by IMDB).
@@ -17,10 +19,17 @@ public class InTheatersMovieSelection implements MovieSelection{
     private static final String IMDB_ROOT_URI = "http://www.imdb.com/";
 
     @Override
-    public List<String> getSelectedMovies() throws IOException {
+    public List<String> getSelectedMovies() throws MovieInformationUnavailableException {
         String moviesInTheatersUri = IMDB_ROOT_URI + "movies-in-theaters/";
         
-        Document imdbDoc = Jsoup.connect(moviesInTheatersUri).get();
+        Document imdbDoc;
+        
+        try {
+            imdbDoc = Jsoup.connect(moviesInTheatersUri).get();
+        } catch (IOException e) {
+            throw new MovieInformationUnavailableException("Could not retrieve movies in theaters.", e);
+        }
+        
         
         Elements movieLinks = imdbDoc.select("h4 > a");
         

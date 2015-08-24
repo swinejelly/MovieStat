@@ -1,6 +1,5 @@
 package edu.rit.moviestat;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 import edu.rit.moviestat.info.MovieDataSource;
 import edu.rit.moviestat.info.MovieSelection;
 import edu.rit.moviestat.model.Movie;
@@ -27,7 +27,7 @@ public class HomeController {
     private MovieDataSource movieDataSource;
     
     @RequestMapping("/")
-    public ModelAndView index() throws IOException {
+    public ModelAndView index() throws MovieInformationUnavailableException {
         ModelAndView modelView = new ModelAndView("index");
         
         List<String> movieIds = movieSelection.getSelectedMovies();

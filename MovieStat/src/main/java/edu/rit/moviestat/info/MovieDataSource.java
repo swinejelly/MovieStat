@@ -1,6 +1,6 @@
 package edu.rit.moviestat.info;
 
-import java.io.IOException;
+import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 import edu.rit.moviestat.model.Movie;
 
 /**
@@ -14,5 +14,5 @@ public interface MovieDataSource {
      * @return Movie model
      * @throws IOException If an error occurred retrieving the movie.
      */
-    public Movie getMovie(String imdbId) throws IOException;
+    public Movie getMovie(String imdbId) throws MovieInformationUnavailableException;
 }
