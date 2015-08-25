@@ -30,7 +30,6 @@ public class InTheatersMovieSelection implements MovieSelection{
             throw new MovieInformationUnavailableException("Could not retrieve movies in theaters.", e);
         }
         
-        
         Elements movieLinks = imdbDoc.select("h4 > a");
         
         return movieLinks.stream().map(element -> extractIMDBIdFromTitleHref(element.attr("href"))).collect(Collectors.toList());

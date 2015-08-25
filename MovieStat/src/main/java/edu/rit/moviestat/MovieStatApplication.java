@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
 
 import edu.rit.moviestat.info.InTheatersMovieSelection;
 import edu.rit.moviestat.info.MovieDataSource;
@@ -40,8 +41,9 @@ public class MovieStatApplication extends SpringBootServletInitializer {
     }
     
     @Bean
+    @Scope("prototype")
     public Executor executor() {
-        int corePoolSize = 16;
+        int corePoolSize = 32;
         int maximumPoolSize = 32;
         
         long keepAliveTime = 10;

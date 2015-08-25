@@ -1,6 +1,5 @@
 package edu.rit.moviestat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +31,7 @@ public class HomeController {
         
         List<String> movieIds = movieSelection.getSelectedMovies();
         
-        List<Movie> movies = new ArrayList<Movie>();
-        
-        for (String movieId: movieIds) {
-            Movie movie = movieDataSource.getMovie(movieId);
-            
-            movies.add(movie);
-        }
+        List<Movie> movies = movieDataSource.getMovies(movieIds);
         
         modelView.addObject("movies", movies);
         

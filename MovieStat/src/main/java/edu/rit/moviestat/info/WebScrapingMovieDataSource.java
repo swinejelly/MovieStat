@@ -36,7 +36,10 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     private static final String WIKIPEDIA_ROOT_URI = "https://en.wikipedia.org/";
     
     @Autowired
-    private Executor executor;
+    private Executor movieExecutor;
+    
+    @Autowired
+    private Executor actorExecutor;
 
     @Override
     public Movie getMovie(String imdbId) throws MovieInformationUnavailableException {
@@ -57,6 +60,40 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
         List<Actor> actors = getActors(doc);
         
         return new Movie(title, releaseDate, actors);
+    }
+    
+
+    @Override
+    public List<Movie> getMovies(List<String> imdbIds) throws MovieInformationUnavailableException {
+        List<RunnableFuture<Movie>> movieFutures = imdbIds.stream()
+                                                          .map( imdbId -> getMovieRunnableFuture(imdbId))
+                                                          .collect(Collectors.toList());
+        
+        List<Movie> movies = new ArrayList<Movie>();
+        
+        for (RunnableFuture<Movie> movieFuture: movieFutures) {
+            movieExecutor.execute(movieFuture);
+        }
+        
+        for (RunnableFuture<Movie> movieFuture: movieFutures) {
+            try {
+                movies.add(movieFuture.get());
+            } catch (InterruptedException | ExecutionException e) {
+                // Neither exception should happen in normal or recoverable operation of the program.
+                throw new RuntimeException(e);
+            }
+        }
+        
+        return movies;
+    }
+    
+    /**
+     * Creates a RunnableFuture for a Movie
+     * @param imdbId IMDB id of the movie to retrieve
+     * @return RunnableFuture that resolves to a Movie
+     */
+    public RunnableFuture<Movie> getMovieRunnableFuture(String imdbId) {
+        return new FutureTask<Movie>( () -> getMovie(imdbId) );
     }
     
     /**
@@ -121,7 +158,7 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
                                                                       .collect(Collectors.toList());
         
         for (RunnableFuture<Actor> actorFuture: actorFutures) {
-            executor.execute(actorFuture);
+            actorExecutor.execute(actorFuture);
         }
         
         for (Future<Actor> actorFuture: actorFutures) {
@@ -210,5 +247,4 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
         
         return wikiApiUri + queryExtension;
     }
-
 }
