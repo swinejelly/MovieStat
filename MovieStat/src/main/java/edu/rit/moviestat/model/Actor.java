@@ -3,11 +3,16 @@ package edu.rit.moviestat.model;
 import java.time.LocalDate;
 import java.time.Period;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 /**
  * Model representing an actor who stars in movies.
  * @author Scott Jordan
  */
+@Entity
 public class Actor {
+    @Id
     private String name;
     
     private LocalDate birthdate;
@@ -48,4 +53,6 @@ public class Actor {
         this.name = name;
         this.birthdate = birthdate;
     }
+    
+    protected Actor() {}
 }

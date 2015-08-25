@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 import edu.rit.moviestat.model.Actor;
 import edu.rit.moviestat.model.Movie;
+import edu.rit.moviestat.model.MovieSelection;
 
 /**
  * MovieDataSource that sources information for the Movie model by scraping
@@ -42,8 +43,8 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     private Executor actorExecutor;
 
     @Override
-    public Movie getMovie(String imdbId) throws MovieInformationUnavailableException {
-        String url = IMDB_ROOT_URI + "title/" + imdbId;
+    public Movie getMovie(MovieSelection movieSelection) throws MovieInformationUnavailableException {
+        String url = IMDB_ROOT_URI + "title/" + movieSelection.getImdbId();
         
         Document doc;
         
@@ -59,14 +60,14 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
         
         List<Actor> actors = getActors(doc);
         
-        return new Movie(title, releaseDate, actors);
+        return new Movie(movieSelection.getImdbId(), title, releaseDate, actors);
     }
     
 
     @Override
-    public List<Movie> getMovies(List<String> imdbIds) throws MovieInformationUnavailableException {
-        List<RunnableFuture<Movie>> movieFutures = imdbIds.stream()
-                                                          .map( imdbId -> getMovieRunnableFuture(imdbId))
+    public List<Movie> getMovies(List<MovieSelection> movieSelections) throws MovieInformationUnavailableException {
+        List<RunnableFuture<Movie>> movieFutures = movieSelections.stream()
+                                                          .map( movieSelection -> getMovieRunnableFuture(movieSelection))
                                                           .collect(Collectors.toList());
         
         List<Movie> movies = new ArrayList<Movie>();
@@ -89,11 +90,11 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     
     /**
      * Creates a RunnableFuture for a Movie
-     * @param imdbId IMDB id of the movie to retrieve
+     * @param movieSelection MovieSelection to get Movie for
      * @return RunnableFuture that resolves to a Movie
      */
-    public RunnableFuture<Movie> getMovieRunnableFuture(String imdbId) {
-        return new FutureTask<Movie>( () -> getMovie(imdbId) );
+    public RunnableFuture<Movie> getMovieRunnableFuture(MovieSelection movieSelection) {
+        return new FutureTask<Movie>( () -> getMovie(movieSelection) );
     }
     
     /**
