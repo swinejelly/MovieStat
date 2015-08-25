@@ -1,7 +1,7 @@
 package edu.rit.moviestat.info;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class CachingMovieSelectionDataSourceDecorator implements MovieSelectionD
     
     private MovieSelectionDataSource decoratee;
     
-    private LocalDateTime lastUpdate = null;
+    private Calendar lastUpdate = null;
     
     @Autowired
     private MovieSelectionRepository repository;
@@ -48,13 +48,16 @@ public class CachingMovieSelectionDataSourceDecorator implements MovieSelectionD
         
         repository.save(movieSelections);
         
-        lastUpdate = LocalDateTime.now();
+        lastUpdate = Calendar.getInstance();
         
         return decoratee.getSelectedMovies();
     }
     
     private boolean shouldTryCache() {
-        return lastUpdate != null && lastUpdate.isAfter(LocalDateTime.now().minusHours(1));
+        Calendar oneHourAgo = Calendar.getInstance();
+        oneHourAgo.add(Calendar.HOUR, -1);
+        
+        return lastUpdate != null && lastUpdate.after(oneHourAgo);
     }
 
 }

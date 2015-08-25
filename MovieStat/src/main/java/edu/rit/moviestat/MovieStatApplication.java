@@ -20,7 +20,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
-import edu.rit.moviestat.exception.MovieInformationUnavailableException;
 import edu.rit.moviestat.info.CachingMovieDataSource;
 import edu.rit.moviestat.info.CachingMovieSelectionDataSourceDecorator;
 import edu.rit.moviestat.info.InTheatersMovieSelectionDataSource;

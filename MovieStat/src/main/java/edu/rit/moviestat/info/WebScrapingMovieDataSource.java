@@ -3,21 +3,22 @@ package edu.rit.moviestat.info;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
-import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.rit.moviestat.exception.MovieInformationUnavailableException;
@@ -56,7 +57,7 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
         
         String title = getTitle(doc);
         
-        LocalDate releaseDate = getReleaseDate(doc);
+        Calendar releaseDate = getReleaseDate(doc);
         
         List<Actor> actors = getActors(doc);
         
@@ -66,9 +67,10 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
 
     @Override
     public List<Movie> getMovies(List<MovieSelection> movieSelections) throws MovieInformationUnavailableException {
-        List<RunnableFuture<Movie>> movieFutures = movieSelections.stream()
-                                                          .map( movieSelection -> getMovieRunnableFuture(movieSelection))
-                                                          .collect(Collectors.toList());
+        List<RunnableFuture<Movie>> movieFutures = new ArrayList<>();
+        for (MovieSelection movieSelection: movieSelections) {
+            movieFutures.add(getMovieRunnableFuture(movieSelection));
+        }
         
         List<Movie> movies = new ArrayList<Movie>();
         
@@ -93,8 +95,13 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
      * @param movieSelection MovieSelection to get Movie for
      * @return RunnableFuture that resolves to a Movie
      */
-    public RunnableFuture<Movie> getMovieRunnableFuture(MovieSelection movieSelection) {
-        return new FutureTask<Movie>( () -> getMovie(movieSelection) );
+    public RunnableFuture<Movie> getMovieRunnableFuture(final MovieSelection movieSelection) {
+        return new FutureTask<Movie>( new Callable<Movie>() {
+            @Override
+            public Movie call() throws Exception {
+                return getMovie(movieSelection);
+            }
+        });
     }
     
     /**
@@ -108,17 +115,23 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
     /**
      * Get the release date of a movie from its IMDB page.
      * @param doc Document of a movie's IMDB page.
-     * @return LocalDate of a movie's release date if possible otherwise null.
+     * @return Calendar of a movie's release date if possible otherwise null.
      */
-    private static LocalDate getReleaseDate(Document doc) {
+    private static Calendar getReleaseDate(Document doc) {
         Element releaseDateElement = doc.select("meta[itemprop=datePublished]").first();
 
         if (releaseDateElement != null) {
             String releaseDateText = releaseDateElement.attr("content");
             
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            Calendar releaseDate = Calendar.getInstance();
+            
             try {
-                return LocalDate.parse(releaseDateText, DateTimeFormatter.ISO_LOCAL_DATE);
-            } catch (DateTimeParseException exception) {}
+                releaseDate.setTime(sdf.parse(releaseDateText));
+                
+                return releaseDate;
+            } catch (ParseException exception) {}
         }
         
         return null;
@@ -129,15 +142,21 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
      * @param doc Document of an actor's wikipedia article.
      * @return LocalDate of actor's birthdate if possible otherwise null.
      */
-    private static LocalDate getBirthdate(Document doc) {
+    private static Calendar getBirthdate(Document doc) {
         Element birthdayElement = doc.select("span.bday").first();
         
         if (birthdayElement != null) {
             String birthdayText = birthdayElement.text();
             
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            Calendar birthDate = Calendar.getInstance();
+            
             try {
-                return LocalDate.parse(birthdayText, DateTimeFormatter.ISO_LOCAL_DATE);
-            } catch (DateTimeParseException e) {}
+                birthDate.setTime(sdf.parse(birthdayText));
+                
+                return birthDate;
+            } catch (ParseException e) {}
         }
         
         return null;
@@ -149,14 +168,16 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
      * @return List of Actors
      */
     private List<Actor> getActors(Document doc) throws MovieInformationUnavailableException {
-        List<String> actorNames = doc.select("td[itemtype$=Person]").stream()
-                                     .map(element -> element.select("span").html())
-                                     .collect(Collectors.toList());
+        Elements personElements = doc.select("td[itemtype$=Person]");
+        
+        List<RunnableFuture<Actor>> actorFutures = new ArrayList<>();
+        for (Element personElement: personElements) {
+            String name = personElement.select("span").html();
+            
+            actorFutures.add(getActorRunnableFuture(name));
+        }
         
         List<Actor> actors = new ArrayList<Actor>();
-        
-        List<RunnableFuture<Actor>> actorFutures = actorNames.stream().map(WebScrapingMovieDataSource::getActorRunnableFuture)
-                                                                      .collect(Collectors.toList());
         
         for (RunnableFuture<Actor> actorFuture: actorFutures) {
             actorExecutor.execute(actorFuture);
@@ -179,8 +200,13 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
      * @param actorName Name of the actor to get information for.
      * @return RunnableFuture that resolves to an Actor.
      */
-    private static RunnableFuture<Actor> getActorRunnableFuture(String actorName) {
-        return new FutureTask<Actor>( () -> getActor(actorName));
+    private static RunnableFuture<Actor> getActorRunnableFuture(final String actorName) {
+        return new FutureTask<Actor>( new Callable<Actor>() {
+            @Override
+            public Actor call() throws Exception {
+                return getActor(actorName);
+            }
+        });
     }
     
     /**
@@ -195,7 +221,7 @@ public class WebScrapingMovieDataSource implements MovieDataSource {
             if (actorWikipediaURL != null) {
                 Document doc = Jsoup.connect(actorWikipediaURL).get();
                 
-                LocalDate birthdate = getBirthdate(doc);
+                Calendar birthdate = getBirthdate(doc);
                 
                 return new Actor(actorName, birthdate);
             }

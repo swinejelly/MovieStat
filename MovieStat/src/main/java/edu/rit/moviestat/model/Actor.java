@@ -1,10 +1,11 @@
 package edu.rit.moviestat.model;
 
-import java.time.LocalDate;
-import java.time.Period;
+import java.util.Calendar;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Model representing an actor who stars in movies.
@@ -15,7 +16,8 @@ public class Actor {
     @Id
     private String name;
     
-    private LocalDate birthdate;
+    @Temporal(TemporalType.DATE)
+    private Calendar birthdate;
 
     public String getName() {
         return name;
@@ -25,11 +27,11 @@ public class Actor {
         this.name = name;
     }
 
-    public LocalDate getBirthdate() {
+    public Calendar getBirthdate() {
         return birthdate;
     }
 
-    public void setBirthdate(LocalDate birthdate) {
+    public void setBirthdate(Calendar birthdate) {
         this.birthdate = birthdate;
     }
     
@@ -39,17 +41,30 @@ public class Actor {
      */
     public Integer getAge() {
         if (birthdate != null) {
-            LocalDate now = LocalDate.now();
+            Calendar now = Calendar.getInstance();
             
-            Period age = Period.between(birthdate, now);
+            int years = now.get(Calendar.YEAR) - birthdate.get(Calendar.YEAR);
             
-            return age.getYears();
+            boolean sameMonth = birthdate.get(Calendar.MONTH) == now.get(Calendar.MONTH);
+            boolean greaterMonth = birthdate.get(Calendar.MONTH) < now.get(Calendar.MONTH);
+            
+            if (greaterMonth) {
+                years++;
+            } else if (sameMonth) {
+                boolean greaterEqualDay = birthdate.get(Calendar.DAY_OF_MONTH) <= now.get(Calendar.DAY_OF_MONTH);
+                
+                if (greaterEqualDay) {
+                    years++;
+                }
+            }
+            
+            return years;
         }
         
         return null;
     }
 
-    public Actor(String name, LocalDate birthdate) {
+    public Actor(String name, Calendar birthdate) {
         this.name = name;
         this.birthdate = birthdate;
     }

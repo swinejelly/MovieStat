@@ -25,7 +25,7 @@
       <tr>
         <td>${movie.getTitle()}</td>
         <td>
-          ${movie.getReleaseDate()}
+          <fmt:formatDate value="${movie.getReleaseDate().getTime()}" type="date" dateStyle="short" />
         </td>
         <td>
           <ul>

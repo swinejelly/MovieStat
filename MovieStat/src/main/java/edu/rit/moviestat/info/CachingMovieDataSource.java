@@ -3,7 +3,6 @@ package edu.rit.moviestat.info;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,15 +44,25 @@ public class CachingMovieDataSource implements MovieDataSource {
 
     @Override
     public List<Movie> getMovies(List<MovieSelection> movieSelections) throws MovieInformationUnavailableException {
-        List<String> imdbIds = movieSelections.stream().map(movieSelection -> movieSelection.getImdbId()).collect(Collectors.toList());
+        List<String> imdbIds = new ArrayList<>();
+        for (MovieSelection movieSelection: movieSelections) {
+            imdbIds.add(movieSelection.getImdbId());
+        }
         
         List<Movie> foundMovies = getAllMoviesFromRepository(imdbIds);
-        List<String> foundImdbIds = foundMovies.stream().map(movie -> movie.getImdbId()).collect(Collectors.toList());
         
+        List<String> foundImdbIds = new ArrayList<>();
+        for (Movie movie: foundMovies) {
+            foundImdbIds.add(movie.getImdbId());
+        }
+                
         Collection<String> missingImdbIds = new ArrayList<String>(imdbIds);
         missingImdbIds.removeAll(foundImdbIds);
         
-        List<MovieSelection> missingMovieSelection = missingImdbIds.stream().map(MovieSelection::new).collect(Collectors.toList());
+        List<MovieSelection> missingMovieSelection = new ArrayList<>();
+        for (String missingImdbId: missingImdbIds) {
+            missingMovieSelection.add(new MovieSelection(missingImdbId));
+        }
         
         List<Movie> remainingMovies = decoratee.getMovies(missingMovieSelection);
         
@@ -68,7 +77,9 @@ public class CachingMovieDataSource implements MovieDataSource {
         Iterable<Movie> allFoundMovies = movieRepository.findAll(imdbIds);
         
         List<Movie> foundMovies = new ArrayList<>();
-        allFoundMovies.forEach(foundMovies::add);
+        for (Movie movie: allFoundMovies) {
+            foundMovies.add(movie);
+        }
         
         return foundMovies;
     }

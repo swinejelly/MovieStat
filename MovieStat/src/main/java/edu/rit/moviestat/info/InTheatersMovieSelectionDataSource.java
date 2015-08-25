@@ -1,11 +1,12 @@
 package edu.rit.moviestat.info;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import edu.rit.moviestat.exception.MovieInformationUnavailableException;
@@ -33,9 +34,14 @@ public class InTheatersMovieSelectionDataSource implements MovieSelectionDataSou
         
         Elements movieLinks = imdbDoc.select("h4 > a");
         
-        return movieLinks.stream()
-                         .map(element -> new MovieSelection(extractIMDBIdFromTitleHref(element.attr("href"))))
-                         .collect(Collectors.toList());
+        List<MovieSelection> movieSelections = new ArrayList<>();
+        for (Element movieLink: movieLinks) {
+            String imdbId = extractIMDBIdFromTitleHref(movieLink.attr("href"));
+            
+            movieSelections.add(new MovieSelection(imdbId));
+        }
+        
+        return movieSelections;
     }
     
     /**

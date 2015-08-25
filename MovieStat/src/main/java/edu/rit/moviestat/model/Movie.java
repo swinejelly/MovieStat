@@ -1,12 +1,13 @@
 package edu.rit.moviestat.model;
 
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
-import java.util.OptionalDouble;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * Model representing a movie and its cast.
@@ -20,7 +21,8 @@ public class Movie {
     
     private String title;
     
-    private LocalDate releaseDate;
+    @Temporal(TemporalType.DATE)
+    private Calendar releaseDate;
     
     @ManyToMany
     private List<Actor> cast;
@@ -41,11 +43,11 @@ public class Movie {
         this.title = title;
     }
 
-    public LocalDate getReleaseDate() {
+    public Calendar getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate(LocalDate releaseDate) {
+    public void setReleaseDate(Calendar releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -57,17 +59,30 @@ public class Movie {
         this.cast = cast;
     }
     
+    /**
+     * Find the average age of the cast, only considering those who have an age present. 
+     * @return The average age, or null if no actors have ages.
+     */
     public Double getAverageAgeCast() {
-        OptionalDouble averageAge = cast.stream().filter(actor -> actor.getAge() != null).mapToInt(actor -> actor.getAge()).average();
+        int numActorsWithAge = 0;
+        double sum = 0;
         
-        if (averageAge.isPresent()) {
-            return averageAge.getAsDouble();
+        for (Actor actor: cast) {
+            if (actor.getAge() != null) {
+                numActorsWithAge++;
+                
+                sum += actor.getAge();
+            }
+        }
+        
+        if (numActorsWithAge >= 0 && sum > 0) {
+            return sum / numActorsWithAge;
         }
         
         return null;
     }
 
-    public Movie(String imdbId, String title, LocalDate releaseDate, List<Actor> cast) {
+    public Movie(String imdbId, String title, Calendar releaseDate, List<Actor> cast) {
         this.imdbId = imdbId;
         this.title = title;
         this.releaseDate = releaseDate;
